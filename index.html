@@ -25,10 +25,13 @@
         .slick-cell{
             line-height: 20px;
         }
+        [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+            display: none !important;
+        }
     </style>
 </head>
-<body ng-app="dora" ng-controller="Main">
-<div class="container-fluid">
+<body ng-app="dora" ng-controller="Main" ng-cloak>
+<div class="container-fluid"  ng-cloak>
     <h4>Dora <small>{{currentResultSet.name}}</small></h4>
 </div>
 <nav class="navbar navbar-default">
@@ -357,35 +360,5 @@
         return contentItem;
     }
 </script>
-<!-- script>
-    (function() {
-    var config = {
-        content: [{
-            type: 'row',
-            content:[{
-                type: 'component',
-                componentName: 'testComponent',
-                componentState: { label: 'A' }
-            },{
-                type: 'column',
-                content:[{
-                    type: 'component',
-                    componentName: 'testComponent',
-                    componentState: { label: 'B' }
-                },{
-                    type: 'component',
-                    componentName: 'testComponent',
-                    componentState: { label: 'C' }
-                }]
-            }]
-        }]
-    };
-    var myLayout = new GoldenLayout(config, '#main-content');
-        myLayout.registerComponent( 'testComponent', function( container, state ){
-            container.getElement().html( '<h2>' + state.label + '</h2>');
-        });
-        myLayout.init();
-    })();
-</script -->
 </body>
 </html>
