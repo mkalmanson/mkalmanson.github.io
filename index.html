@@ -17,6 +17,39 @@
             bottom: 0;
             top: 95px;
         }
+        .fs #main-content {
+            top: 0;
+        }
+        #float-nav {
+            position: absolute;
+            left: 30px;
+            top: 40px;
+            background-color: #f8f8f8;
+
+        }
+        #float-nav.navbar-nav > li > a {
+            padding-top: 14px;
+            padding-bottom: 13px;
+        }
+        #minimizeButton {
+            display: none;
+            position: absolute;
+            top:5px;
+            right: 5px;
+            z-index: 50;  // GoldenLayout uses 40 for maximized window
+        }
+        .fs #minimizeButton {
+            display: block;
+
+        }
+        .fs #float-nav {
+            border: 1px solid #e7e7e7;
+            z-index: 50;  // GoldenLayout uses 40 for maximized window
+        }
+        .fs .lm_header {
+            /*height: 0!important;*/
+            overflow: hidden!important;
+        }
         .ui-widget *{
             vertical-align: middle;
             font: 8pt Arial, sans-serif;
@@ -39,14 +72,17 @@
 
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav">
-                <li><a href="#" ng-click="openSearchForm()">Query</a></li>
-                <li ng-if="currentResultSet.name !== ''"><a href="#" ng-click="showVisualization()">Visualizations</a></li>
-            </ul>
+
         </div>
     </div>
 </nav>
-
+<ul id="float-nav" class="nav navbar-nav">
+    <li><a href="#" ng-click="openSearchForm()">Query</a></li>
+    <li ng-if="currentResultSet.name !== ''"><a href="#" ng-click="showVisualization()">Visualizations</a></li>
+</ul>
+<button id="minimizeButton" type="button" class="btn btn-default" aria-label="Left Align" ng-click="minimise()">
+    <span class="glyphicon glyphicon-resize-small" aria-hidden="true"></span>
+</button>
 <div id="main-content" layout-manager></div>
 
 <script src="js/jquery-1.11.2.js"></script>
@@ -108,7 +144,8 @@
                         componentName: 'angularComponent',
                         componentState: {
                             template: '<div visualization></div>'
-                        }
+                        },
+                        fullScreen: true
                     });
                 };
                 $scope.showGrid = function() {
@@ -122,6 +159,11 @@
                         }
                     });
                 };
+                $scope.minimise = function() {
+                    if (myLayout._maximisedItem) {
+                        myLayout._maximisedItem.toggleMaximise();
+                    }
+                }
             }])
             .controller('SavedResults', ['$scope', function($scope) {
                 $scope.updateResultSet = function(rs) {
@@ -291,7 +333,6 @@
                                     newScope.glState = state;
                                     container.getElement().html($compile(state.template)(newScope));
                                 })
-
                             }
 
                         });
@@ -302,15 +343,29 @@
                             }
 
                         })
-                        myLayout.init()
+                        myLayout.init();
+                        window.onresize = function() {
+                            myLayout.updateSize();
+                        }
                     }
                 }
 
             }]);
     function addToTopPanel(config) {
-        getTopPanel().addChild(config);
+        if (myLayout._maximisedItem) {
+            myLayout._maximisedItem.toggleMaximise();
+        }
+        var parent = getTopPanel();
+        var contentItem = myLayout.createContentItem(config, parent);
+        contentItem.on('stateChanged', function() {
+            console.log('state changed');
+        })
+        parent.addChild(contentItem);
     }
     function addToBottomPanel(config) {
+        if (myLayout._maximisedItem) {
+            myLayout._maximisedItem.toggleMaximise();
+        }
         getBottomPanel().addChild(config);
     }
     function getTopPanel() {
@@ -340,6 +395,8 @@
             myLayout.root.contentItems[0].addChild(tmp);
         }
     }
+    var maximisedItem = null;
+    var headerHeight;
     function createContainerPanel(id, parent) {
         var contentItem = myLayout.createContentItem({
             id: id,
@@ -357,6 +414,27 @@
                 }
             }
         }, contentItem);
+        contentItem.on('stateChanged', function(evt) {
+            var item = evt.origin;
+            if (item.isMaximised && maximisedItem !== item && item._activeContentItem.config.fullScreen) {
+                maximisedItem = item;
+                $('body').addClass('fs');
+                myLayout.updateSize();
+                headerHeight = item.header.element.height();
+                item.element.height(item.element.height() + headerHeight);
+                item.header.element.height(0);
+                item.callDownwards( 'setSize' );
+
+            } else if (item === maximisedItem && !item.isMaximised) {
+                maximisedItem = null;
+                $('body').removeClass('fs');
+                myLayout.updateSize();
+                item.element.height(item.element.height() - headerHeight);
+                item.header.element.height(headerHeight);
+                item.callDownwards( 'setSize' );
+            }
+//            console.log('panel state changed, %o', contentItem);
+        })
         return contentItem;
     }
 </script>
