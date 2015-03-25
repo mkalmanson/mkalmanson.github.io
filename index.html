@@ -447,6 +447,7 @@
                                     maximisedItem.element.height(maximisedItem.element.height() + headerHeight);
                                     maximisedItem.header.element.height(0);
                                     maximisedItem.callDownwards( 'setSize' );
+                                    maximisedItem.on('stateChanged', handleMaximize);
                                 } else {
                                     scope.showSavedResults();
                                 }
@@ -525,29 +526,31 @@
                 }
             }
         }, contentItem);
-        contentItem.on('stateChanged', function(evt) {
-            var item = evt.origin;
-            if (item.isMaximised && maximisedItem !== item && item._activeContentItem.config.fullScreen) {
-                maximisedItem = item;
-                $('body').addClass('fs');
-                myLayout.updateSize();
-                headerHeight = item.header.element.height();
-                item.element.height(item.element.height() + headerHeight);
-                item.header.element.height(0);
-                item.callDownwards( 'setSize' );
-                console.log(myLayout.toConfig());
 
-            } else if (item === maximisedItem && !item.isMaximised) {
-                maximisedItem = null;
-                $('body').removeClass('fs');
-                myLayout.updateSize();
-                item.element.height(item.element.height() - headerHeight);
-                item.header.element.height(headerHeight);
-                item.callDownwards( 'setSize' );
-            }
-//            console.log('panel state changed, %o', contentItem);
-        })
+        contentItem.on('stateChanged', handleMaximize);
         return contentItem;
+    }
+    function handleMaximize(evt) {
+        var item = evt.origin;
+        if (item.isMaximised && maximisedItem !== item && item._activeContentItem.config.fullScreen) {
+            maximisedItem = item;
+            $('body').addClass('fs');
+            myLayout.updateSize();
+            headerHeight = item.header.element.height();
+            item.element.height(item.element.height() + headerHeight);
+            item.header.element.height(0);
+            item.callDownwards( 'setSize' );
+            console.log(myLayout.toConfig());
+
+        } else if (item === maximisedItem && !item.isMaximised) {
+            maximisedItem = null;
+            $('body').removeClass('fs');
+            myLayout.updateSize();
+            item.element.height(item.element.height() - headerHeight);
+            item.header.element.height(headerHeight);
+            item.callDownwards( 'setSize' );
+        }
+//            console.log('panel state changed, %o', contentItem);
     }
 </script>
 </body>
