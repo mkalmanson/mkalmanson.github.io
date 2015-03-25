@@ -95,6 +95,98 @@
 <script src="js/slick.core.js"></script>
 <script src="js/slick.grid.js"></script>
 <script>
+    var gxState = {
+        "settings": {
+            "hasHeaders": true,
+            "constrainDragToContainer": true,
+            "reorderEnabled": true,
+            "selectionEnabled": false,
+            "popoutWholeStack": false,
+            "blockedPopoutsThrowError": true,
+            "closePopoutsOnUnload": true,
+            "showPopoutIcon": true,
+            "showMaximiseIcon": true,
+            "showCloseIcon": true
+        },
+        "dimensions": {
+            "borderWidth": 5,
+            "minItemHeight": 10,
+            "minItemWidth": 10,
+            "headerHeight": 20,
+            "dragProxyWidth": 300,
+            "dragProxyHeight": 200
+        },
+        "labels": {
+            "close": "close",
+            "maximise": "maximise",
+            "minimise": "minimise",
+            "popout": "open in new window",
+            "popin": "pop in"
+        },
+        "content": [
+            {
+                "type": "column",
+                "isClosable": true,
+                "reorderEnabled": true,
+                "title": "",
+                "content": [
+                    {
+                        "id": [
+                            "topPanel",
+                            "__glMaximised"
+                        ],
+                        "type": "stack",
+                        "isClosable": false,
+                        "reorderEnabled": true,
+                        "title": "",
+                        "height": 50,
+                        "activeItemIndex": 0,
+                        "content": [
+                            {
+                                "id": "viz",
+                                "type": "component",
+                                "title": "Visualization",
+                                "componentName": "angularComponent",
+                                "componentState": {
+                                    "template": "<div visualization></div>"
+                                },
+                                "fullScreen": true,
+                                "isClosable": true,
+                                "reorderEnabled": true
+                            }
+                        ]
+                    },
+                    {
+                        "id": "bottomPanel",
+                        "type": "stack",
+                        "isClosable": false,
+                        "reorderEnabled": true,
+                        "title": "",
+                        "height": 50,
+                        "activeItemIndex": 0,
+                        "content": [
+                            {
+                                "id": "savedResults",
+                                "type": "component",
+                                "title": "Saved Results",
+                                "componentName": "angularComponent",
+                                "componentState": {
+                                    "template": "<div ng-controller=\"SavedResults\"><ul class=\"list-group\"><li class=\"list-group-item\" ng-repeat=\"set in resultSets\"><a href=\"\" ng-click=\"updateResultSet(set)\">{{set.name}}</a></li></ul></div>"
+                                },
+                                "isClosable": true,
+                                "reorderEnabled": true
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "isClosable": true,
+        "reorderEnabled": true,
+        "title": "",
+        "openPopouts": [],
+        "maximisedItemId": "__glMaximised"
+    };
     var myLayout;
     angular.module('dora', [])
             .controller('Main', ['$scope', function($scope) {
@@ -314,17 +406,24 @@
                     }
                 }
             }])
-            .directive('layoutManager', ['$compile', function($compile) {
+            .directive('layoutManager', ['$compile', '$location', function($compile, $location) {
                 return {
                     restrict: 'A',
                     link: function(scope, element, attr) {
-                        var config = {
-                            content: [{
-                                type: 'column',
-                                content:[]
-                            }]
-                        };
-                        myLayout = new GoldenLayout(config, '#main-content');
+                        var gx = $location.path() === '/GX';
+
+                        if (gx) {
+                            myLayout = new GoldenLayout(gxState, '#main-content');
+                        } else {
+                            var config = {
+                                content: [{
+                                    type: 'column',
+                                    content:[]
+                                }]
+                            };
+                            myLayout = new GoldenLayout(config, '#main-content');
+                        }
+
                         myLayout.registerComponent( 'angularComponent', function( container, state ){
                             if (state.template) {
                                 container.on('open', function() {
@@ -338,7 +437,7 @@
                         });
 
                         myLayout.on('initialised', function() {
-                            if (!myLayout.isSubWindow) {
+                            if (!myLayout.isSubWindow && !gx) {
                                 scope.showSavedResults();
                             }
 
@@ -424,6 +523,7 @@
                 item.element.height(item.element.height() + headerHeight);
                 item.header.element.height(0);
                 item.callDownwards( 'setSize' );
+                console.log(myLayout.toConfig());
 
             } else if (item === maximisedItem && !item.isMaximised) {
                 maximisedItem = null;
