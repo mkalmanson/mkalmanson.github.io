@@ -439,19 +439,19 @@
 
                         myLayout.on('initialised', function() {
                             if (!myLayout.isSubWindow) {
+                                if (gx) {
+                                    maximisedItem = myLayout._maximisedItem;
+                                    $('body').addClass('fs');
+                                    myLayout.updateSize();
+                                    headerHeight = maximisedItem.header.element.height();
+                                    maximisedItem.element.height(maximisedItem.element.height() + headerHeight);
+                                    maximisedItem.header.element.height(0);
+                                    maximisedItem.callDownwards( 'setSize' );
+                                } else {
+                                    scope.showSavedResults();
+                                }
+                            }
 
-                            }
-                            if (gx) {
-                                maximisedItem = myLayout._maximisedItem;
-                                $('body').addClass('fs');
-                                myLayout.updateSize();
-                                headerHeight = maximisedItem.header.element.height();
-                                maximisedItem.element.height(maximisedItem.element.height() + headerHeight);
-                                maximisedItem.header.element.height(0);
-                                maximisedItem.callDownwards( 'setSize' );
-                            } else {
-                                scope.showSavedResults();
-                            }
 
                         })
                         myLayout.init();
